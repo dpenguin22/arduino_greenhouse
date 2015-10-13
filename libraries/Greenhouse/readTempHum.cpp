@@ -1,4 +1,18 @@
-// Function to read data from the DHT22 temperature and humidity sensor 
+/*
+    Purpose:
+        Function for reading temerature/humidity sensor
+
+    Dependencies:
+        DHT library
+        Arduino library
+
+    Assumptions/Limitations:
+        Only tested with DHT22 sensor
+
+    Modification History:
+        10/2015 - Initial version
+
+*/
 
 // Libraries
 #include <dht.h>

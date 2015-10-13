@@ -1,3 +1,6 @@
+#include <readMoisture.h>
+#include <readTempHum.h>
+
 // Main function for Greenhouse control
 
 
@@ -5,6 +8,7 @@
 #include <dht.h>
 #include <readMoisture.h>
 #include <readTempHum.h>
+#include <timer.h>
 
 // Constants
 
