@@ -1,5 +1,3 @@
-#include <readMoisture.h>
-#include <readTempHum.h>
 
 // Main function for Greenhouse control
 
@@ -11,6 +9,8 @@
 #include <timer.h>
 
 // Constants
+#define MOISTURE_INTERVAL 20    // Interval (s) to run moisture check
+#define TEMPHUM_INTERVAL  10    // Interval (s) to run temperature/humidity check
 
 // Calibration data
 const int moistMin = 300; // Trigger value to turn on irrigation
@@ -35,32 +35,64 @@ const int ventPinD = 5;  // Open vents
 
 
 // Variables
+unsigned long lastTime;
+unsigned long deltaTime;
+unsigned long currentTime;
 float moistVal;
 float fTemperatureVal;
 float humidityVal;
 
+// Define timers
+Timer tempHumTimer;
+Timer moistureTimer;
+
 void setup() {
     // Open a serial connection
     Serial.begin(9600);
+    lastTime = millis();
+
+    tempHumTimer.set_threshold(1.0 / TEMPHUM_INTERVAL);
+    moistureTimer.set_threshold(1.0 / MOISTURE_INTERVAL);
+    
 }
 
 void loop() {  
-  
-    // Call function to read moisture data
-    moistVal = readMoisture(moistPinA);
-    readTempHum(dhtPinD, &fTemperatureVal, &humidityVal);
 
+    // Compute time interval since this code was last run
+    currentTime = millis();
+    deltaTime = currentTime - lastTime;
+    lastTime = currentTime;
+
+    tempHumTimer.increment_timer(deltaTime);
+    moistureTimer.increment_timer(deltaTime);
+    
+    Serial.print("tempHumTimer: ");
+    Serial.print(tempHumTimer.get_value());
+    Serial.print("  moistureTimer: ");
+    Serial.println(moistureTimer.get_value());
+    
+    // Call function to read moisture data
+    if (moistureTimer.evaluate_timer()) {
+        moistVal = readMoisture(moistPinA);
+        Serial.print("Moisture: ");
+        Serial.println(moistVal);
+    }
+    
+    // Call function to read temperature and humidity data
+    if (tempHumTimer.evaluate_timer()) {
+        readTempHum(dhtPinD, &fTemperatureVal, &humidityVal);
+        Serial.print("Humidity: ");
+        Serial.print(humidityVal);
+        Serial.print(" %, Temp: ");
+        Serial.print(fTemperatureVal);
+        Serial.println("  Fahrenheit");
+    }
     // Print out results
-    Serial.print("Moisture: ");
-    Serial.println(moistVal);
-    Serial.print("Humidity: ");
-    Serial.print(humidityVal);
-    Serial.print(" %, Temp: ");
-    Serial.print(fTemperatureVal);
-    Serial.println("  Fahrenheit");
+    
+
     
     // Delay
-    delay(2000);
+    //delay(2000);
 
   
 }

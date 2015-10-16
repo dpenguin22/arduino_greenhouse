@@ -17,41 +17,44 @@
 #include "timer.h"
 
 // Constructor. Initialize to zero
-void Timer::Timer() {
+Timer::Timer() {
     value = 0;
-    interval = 0;
+    threshold = 0;
+    increment = 0;
     frequency = 0;
 }
 
 // increment_timer will add the increment to the timer value
-void increment_timer(unsigned long increment, unsigned long value) {
+void Timer::increment_timer(unsigned long increment) {
     value = value + increment;
 
 }
 
-// Determine the increment for the timer based on the 
-void determine_increment(float callFreq) {
-    increment = frequency / callFreq;
+// Determine the threshold for triggering the timer
+void Timer::set_threshold(float timerFreq) {
+    // The input frequency is in Hz, the increment must be in ms
+    threshold = (unsigned long) (1.0 / timerFreq) * 1000;
 
 }
 
 // reset_timer will reset the timer to zero
-void reset_timer() {
+void Timer::reset_timer() {
     value = 0;
 }
 
 // get value will return the timer value
-unsigned long get_value {
+unsigned long Timer::get_value() {
     return value;
 } 
 
 // evaluate_timer will check the current value of the timer versus the threshold and 
 // return whether it has been met. It will also reset the timer value
-bool evaluate_timer(unsigned long threshold, unsigned long value) {
+bool Timer::evaluate_timer() {
     if (value >= threshold) {
         reset_timer();
         return true;
     } else {
         return false;
+    }
 }
 
