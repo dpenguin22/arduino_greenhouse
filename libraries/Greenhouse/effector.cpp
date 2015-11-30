@@ -21,7 +21,7 @@
 Effector::Effector(int effPin, bool inPolarity) {
     status = false;
     polarity = inPolarity;
-    
+
     // Initialize to off
     if (inPolarity == 0) {
         // Effectors connected through a relay are active LOW so
