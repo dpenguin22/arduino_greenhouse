@@ -5,7 +5,6 @@
 
     Dependencies:
         DHT library
-        Adafruit CC3000 library
         Set of custom built greenhouse libraries
 
     Assumptions/Limitations:
@@ -22,9 +21,6 @@
 
 // Libraries
 #include <dht.h>
-//#include <setupWifi.h>
-//#include <Adafruit_CC3000.h>
-//#include <SPI.h>
 #include <readMoisture.h>
 #include <readTempHum.h>
 #include <readSerialMessage.h>
@@ -93,13 +89,6 @@ Effector fan(fanPinD, fanPolarity);
 Effector ventOpen(ventOpenPinD, ventPolarity);
 Effector ventClose(ventClosePinD, ventPolarity);
 
-// Define Wifi setup
-// Create an instance of the CC3000 class
-//Adafruit_CC3000 cc3000 = Adafruit_CC3000(ADAFRUIT_CC3000_CS, ADAFRUIT_CC3000_IRQ, ADAFRUIT_CC3000_VBAT,
-//                                         SPI_CLOCK_DIVIDER); // you can change this clock speed;
-// Create an instance of the server 
-//Adafruit_CC3000_Server server(80);
-
 void setup() {
     // Open a serial connection
     //Serial.begin(112500);
@@ -120,8 +109,6 @@ void setup() {
     // Initialize power to moisture sensors off
     digitalWrite(moistPowerPinD, LOW);
 
-    // Initalize Wifi (do this last since it may take several seconds to connect
-//    initialize_wifi();
 }
 
 void loop() { 
@@ -137,9 +124,6 @@ void loop() {
     moistureTimer.increment_timer(deltaTime);
     fanTimer.increment_timer(deltaTime);
     ventTimer.increment_timer(deltaTime);
-
-    // Check for client connections over wifi
-//    process_wifi();
     
     // Process commands
     if (Serial.available() > 0) {
