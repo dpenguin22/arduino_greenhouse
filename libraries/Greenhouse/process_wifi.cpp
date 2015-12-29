@@ -47,7 +47,6 @@ void process_wifi()
     if (req.indexOf("/test/0") != -1) {
         respMsg = "Got signal 0";
         Serial.println("Got signal 0");
-        Serial.println("Test");
     } else if (req.indexOf("/test/1") != -1) {
         respMsg = "Got signal 1";
         Serial.println("Got signal 1");
@@ -70,7 +69,7 @@ void process_wifi()
         }       
     } else {
     
-            respMsg = "Invalid reqest";
+        respMsg = "Invalid reqest";
         Serial.println("invalid request");
         client.stop();
         return;
@@ -88,6 +87,7 @@ void process_wifi()
    // Send the response to the client
    client.print(s);
    delay(1);
+   client.stop();
    Serial.println("Client disconnected");
 
 }

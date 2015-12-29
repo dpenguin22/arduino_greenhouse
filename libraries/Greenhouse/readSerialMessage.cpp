@@ -10,6 +10,7 @@
 
     Modification History:
         11/2015 - Initial version
+        12/2015 - chanded function name
 
 */
 
@@ -18,7 +19,7 @@
 #include <arduino.h>
 
 
-int read_message(String* message, int bufsize)
+int read_serial_message(String* message, int bufsize)
 {
   String buffer = "";
   for (int index = 0; index < bufsize; index++) {

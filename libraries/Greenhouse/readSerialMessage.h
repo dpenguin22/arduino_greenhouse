@@ -14,10 +14,11 @@
 */
 
 #include <Arduino.h>
+#include <string.h>
 
 #ifndef READSERIALMESSAGE_H
 #define READSERIALMESSAGE_H
 
-int read_message(String *, int);
+int read_serial_message(String *, int);
 
 #endif

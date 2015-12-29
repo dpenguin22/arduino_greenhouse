@@ -31,10 +31,9 @@
 // Use hardware SPI for the remaining pins
 // On an UNO, SCK = 13, MISO = 12, and MOSI = 11
 
-//////////////////////
-// WiFi Definitions //
-//////////////////////
-const char WiFiSSID[] = "Barthnet_RE";
+// WiFi Definitions
+//const char WiFiSSID[] = "Barthnet_RE";
+const char WiFiSSID[] = "Barthnet";
 const char WiFiPSK[] = "thepiggiesmustnotbedisturbed";
 // Security can be WLAN_SEC_UNSEC, WLAN_SEC_WEP, WLAN_SEC_WPA or WLAN_SEC_WPA2
 #define WiFiSECURITY   WLAN_SEC_WPA2
