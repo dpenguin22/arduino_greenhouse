@@ -15,6 +15,7 @@
         10/2015 - Added fan control
         11/2015 - Added serial read function
         11/2015 - Added vent control and effector commands
+        12/2015 - Add softsare serial ports for comm with esp8266
 
 */
 
@@ -26,6 +27,7 @@
 #include <readSerialMessage.h>
 #include <timer.h>
 #include <effector.h>
+#include <SoftwareSerial.h>
 
 
 // Constants
@@ -59,12 +61,13 @@ bool ventPolarity = 0; // The vent is connected through a relay which is active 
 const int moistPinA = 5; // Data pin of moisture sensor to Arduino analog pin 5
 
 // Digital pins
-const int pumpPinD = 3;  // Switch on water pump 
-const int fanPinD  = 4;  // Switch on fan
-const int dhtPinD  = 5;  // Data pin of DHT-22 to Arduino digital pin 5
-const int moistPowerPinD = 6; // Apply power to the moisture sensor
-const int ventOpenPinD = 7;  // Open vents
-const int ventClosePinD = 8; // Close vents
+SoftwareSerial espSerial(2,3);  // Rx, Tx
+const int pumpPinD = 4;  // Switch on water pump 
+const int fanPinD  = 5;  // Switch on fan
+const int dhtPinD  = 6;  // Data pin of DHT-22
+const int moistPowerPinD = 7; // Apply power to the moisture sensor
+const int ventOpenPinD = 8;  // Open vents
+const int ventClosePinD = 9; // Close vents
 
 // Variables
 unsigned long lastTime;
@@ -89,10 +92,11 @@ Effector fan(fanPinD, fanPolarity);
 Effector ventOpen(ventOpenPinD, ventPolarity);
 Effector ventClose(ventClosePinD, ventPolarity);
 
+
 void setup() {
     // Open a serial connection
-    //Serial.begin(112500);
-    Serial.begin(9600);
+    Serial.begin(112500);
+    espSerial.begin(112500);
     lastTime = millis();
 
     // Setup the timers
@@ -190,7 +194,7 @@ void loop() {
         readTempHum(dhtPinD, &fTemperatureVal, &humidityVal);
         
         sprintf(myString, "Temperature: %d degF. Humidity: %d%%. Moisture: %d. Vent position: %d\n", (int) fTemperatureVal, (int) humidityVal, (int) moistVal, (int) ventPosition);
-        Serial.print(myString);
+        espSerial.print(myString);
 
     }
 
