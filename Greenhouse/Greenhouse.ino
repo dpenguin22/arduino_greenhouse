@@ -31,7 +31,7 @@
 
 
 // Constants
-#define MAX_MESSAGE_SIZE  80
+#define MAX_MESSAGE_SIZE  120
 #define MOISTURE_INTERVAL 20    // Interval (s) to run moisture check
 #define TEMPHUM_INTERVAL  10    // Interval (s) to run temperature/humidity check
 #define FAN_TIMER 300           // Time (s) to run the fan
@@ -112,7 +112,7 @@ void setup() {
 
     // Initialize power to moisture sensors off
     digitalWrite(moistPowerPinD, LOW);
-
+  
 }
 
 void loop() { 
@@ -130,8 +130,8 @@ void loop() {
     ventTimer.increment_timer(deltaTime);
     
     // Process commands
-    if (Serial.available() > 0) {
-            messageSize = read_serial_message(&incomingString, MAX_MESSAGE_SIZE);
+    if (espSerial.available() > 0) {
+            messageSize = read_serial_message(espSerial, &incomingString, MAX_MESSAGE_SIZE);
 
             //Serial.print("Message size is: ");
             //Serial.println(messageSize);
@@ -193,7 +193,7 @@ void loop() {
     if (tempHumTimer.evaluate_timer()) {
         readTempHum(dhtPinD, &fTemperatureVal, &humidityVal);
         
-        sprintf(myString, "Temperature: %d degF. Humidity: %d%%. Moisture: %d. Vent position: %d\n", (int) fTemperatureVal, (int) humidityVal, (int) moistVal, (int) ventPosition);
+        sprintf(myString, "Temperature: %d degF. Humidity: %d%%. Moisture: %d. Fan Status %d. Vent position: %d\n", (int) fTemperatureVal, (int) humidityVal, (int) moistVal, (int) ventPosition, (int) fan.get_status());
         espSerial.print(myString);
 
     }

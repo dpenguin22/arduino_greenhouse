@@ -10,7 +10,7 @@
 
     Modification History:
         11/2015 - Initial version
-        12/2015 - chanded function name
+        12/2015 - changed function name
 
 */
 
@@ -19,22 +19,23 @@
 #include <arduino.h>
 
 
-int read_serial_message(String* message, int bufsize)
+int read_serial_message(SoftwareSerial& mySerial, String* message, int bufsize)
 {
   String buffer = "";
   for (int index = 0; index < bufsize; index++) {
 
     // Wait until characters are available
-    while (Serial.available() == 0) {
+    while (mySerial.available() == 0) {
     }
     
-    char ch = Serial.read(); // read next character
+    char ch = mySerial.read(); // read next character
     //Serial.print(ch); // echo it back: useful with the serial monitor (optional)
+    //Serial.print(buffer);
  
     if (ch == '\n') {
      // buffer += '\0';          // end of line reached: null terminate string
       *message = buffer;
-      Serial.println(*message);  // print full message before exiting
+      mySerial.println(*message);  // print full message before exiting
       return index;            // success: return length of string (zero if string is empty)
     }
     buffer += ch; // Append character to buffer
@@ -44,7 +45,7 @@ int read_serial_message(String* message, int bufsize)
   // Discard the rest of the line (safer than returning a partial line).
 
   *message = "The received message exceeded the buffer length";
-  Serial.println(*message);
+  mySerial.println(*message);
   return -1; // error: return negative one to indicate the input was too long
 }
 
