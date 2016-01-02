@@ -194,7 +194,10 @@ void loop() {
         readTempHum(dhtPinD, &fTemperatureVal, &humidityVal);
         
         sprintf(myString, "Temperature: %d degF. Humidity: %d%%. Moisture: %d. Fan Status %d. Vent position: %d\n", (int) fTemperatureVal, (int) humidityVal, (int) moistVal, (int) ventPosition, (int) fan.get_status());
+        
+        Serial.print(myString);
         espSerial.print(myString);
+        espSerial.flush();   // Don't allow the next read until this data is finished transmitting
 
     }
 
