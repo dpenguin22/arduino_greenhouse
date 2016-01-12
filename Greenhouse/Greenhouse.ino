@@ -15,7 +15,7 @@
         10/2015 - Added fan control
         11/2015 - Added serial read function
         11/2015 - Added vent control and effector commands
-        12/2015 - Add softsare serial ports for comm with esp8266
+        12/2015 - Add software serial ports for comm with esp8266
 
 */
 
@@ -43,6 +43,8 @@
 bool runFanCMD = 0;
 bool openVentCMD = 0;
 bool closeVentCMD = 0;
+bool postDataCMD = 0;
+bool sendStatusCMD = 0;
 bool runPumpCMD = 0;
 
 // Calibration data
@@ -100,7 +102,8 @@ Effector ventClose(ventClosePinD, ventPolarity);
 void setup() {
     // Open a serial connection
     Serial.begin(112500);
-    espSerial.begin(112500);
+   // espSerial.begin(112500);
+    espSerial.begin(9600);
     lastTime = millis();
 
     // Setup the timers
@@ -137,49 +140,33 @@ void loop() {
     // Process commands
     if (espSerial.available() > 0) {
             messageSize = read_serial_message(espSerial, &incomingString, MAX_MESSAGE_SIZE);
-
-            //Serial.print("Message size is: ");
+            delay(500);
+            //Serial.print(F("Message size is: "));
             //Serial.println(messageSize);
-            Serial.print("Message is: ");
+            Serial.print(F("Message is: "));
             Serial.println(incomingString);
 
             if (incomingString == "runFan") {
-                Serial.println("Received the run fan command.");
                 runFanCMD = 1;
+                Serial.println(F("Received the run fan command."));
             } else if (incomingString == "openVent") {
                 openVentCMD = 1;
+                Serial.println(F("Received the open vent command."));
             } else if (incomingString == "closeVent") {
                 closeVentCMD = 1;
+                Serial.println(F("Received the close vent command."));
+            } else if (incomingString == "postData") {
+                postDataCMD = 1;
+                Serial.println(F("Received the post data command."));
+            } else if (incomingString == "status") {
+                sendStatusCMD = 1;
+                Serial.println("Received the send status command.");
             }
             
     }
 
-    // Execute commands
-    if (runFanCMD) {
-        // Start the fan
-        fan.start_digital(fanPinD);
-        fan.set_status(true);
-        fanTimer.reset_timer();
-        // Reset the command
-        runFanCMD = 0;
-    } else if (openVentCMD) {
-        ventOpen.start_digital(ventOpenPinD);
-        ventOpen.set_status(true);
-        ventTimer.reset_timer();
-        Serial.println("Received the open vent command.");
-        // Reset the command
-        openVentCMD = 0;
-    } else if (closeVentCMD) {
-        ventClose.start_digital(ventClosePinD);
-        ventClose.set_status(true);
-        ventTimer.reset_timer();
-        Serial.println("Received the close vent command.");
-        // Reset the command
-        closeVentCMD = 0;
-    }
-
     
-    // Collect seonsor data
+    // Collect sensor data
     
     // Call function to read moisture data
     if (moistureTimer.evaluate_timer()) {
@@ -200,17 +187,63 @@ void loop() {
         
         sprintf(myString, "Temperature: %d degF. Humidity: %d%%. Moisture: %d. Fan Status %d. Vent position: %d\n", (int) fTemperatureVal, (int) humidityVal, (int) moistVal, (int) ventPosition, (int) fan.get_status());
         
-        Serial.print(myString);
-        espSerial.print(myString);
-        espSerial.flush();   // Don't allow the next read until this data is finished transmitting
+//        espSerial.print(myString);
+//        espSerial.flush();   // Don't allow the next read until this data is finished transmitting
 
     }
 
+// Execute commands
+    if (runFanCMD) {
+        // Start the fan
+        fan.start_digital(fanPinD);
+        fan.set_status(true);
+        fanTimer.reset_timer();
+        // Reset the command
+        runFanCMD = 0;
+    } else if (openVentCMD) {
+        ventOpen.start_digital(ventOpenPinD);
+        ventOpen.set_status(true);
+        ventTimer.reset_timer();
+        Serial.println(F("Received the open vent command."));
+        // Reset the command
+        openVentCMD = 0;
+    } else if (closeVentCMD) {
+        ventClose.start_digital(ventClosePinD);
+        ventClose.set_status(true);
+        ventTimer.reset_timer();
+        Serial.println(F("Received the close vent command."));
+        // Reset the command
+        closeVentCMD = 0;
+    } else if (postDataCMD) {
+        // Get a fresh value from the sensors
+        readTempHum(dhtPinD, &fTemperatureVal, &humidityVal);
+
+        //String postStr = THINGSPEAK_APIKEY;
+        String postStr = "";
+        postStr +="field1=";
+        postStr += String(fTemperatureVal);
+        postStr +="field2=";
+        postStr += String(humidityVal);
+        postStr += "field3=";
+        postStr += String(moistVal);
+        postStr += "\r\n\r\n";
+        // Reset the command
+        postDataCMD = 0;
+
+        // Send data to esp8266 so it can post the data
+        //espSerial.write(1);
+        Serial.println(postStr);
+        espSerial.println(postStr);
+        //espSerial.println(F("Test"));
+        //espSerial.write(postStr);
+        //espSerial.write("Test\r\n");
+        espSerial.flush();
+    }
+    
     // Process effectors
 
     // If the fan is not currently running and the temperature
-    // exceeds the preset value, turn on the fan
-    
+    // exceeds the preset value, turn on the fan   
     if (!fan.get_status() && fanTimer.evaluate_timer() && fTemperatureVal > fanTempMax) {
         
         fan.start_digital(fanPinD);
@@ -231,7 +264,7 @@ void loop() {
         ventOpen.stop_digital(ventOpenPinD);
         ventOpen.set_status(false);
         ventTimer.reset_timer();
-        Serial.println("Vent has completed opening.");
+        Serial.println(F("Vent has completed opening."));
         ventPosition = 1;
     }
 
@@ -240,26 +273,8 @@ void loop() {
         ventClose.stop_digital(ventClosePinD);
         ventClose.set_status(false);
         ventTimer.reset_timer();
-        Serial.println("Vent has completed closing.");
+        Serial.println(F("Vent has completed closing."));
         ventPosition = 0;
     }
-
-    // Post data to web server
-    if (postTimer.evaluate_timer()) {
-        
-        String postStr = THINGSPEAK_APIKEY;
-        postStr +="&field1=";
-        postStr += String(fTemperatureVal);
-        postStr +="&field2=";
-        postStr += String(humidityVal);
-        postStr += "&field3=";
-        postStr += String(moistVal);
-        postStr += "\r\n\r\n";
-
-        // Send data to esp8266 so it can post the data
-        espSerial.print(postStr);
-       
-    }
-
   
 }

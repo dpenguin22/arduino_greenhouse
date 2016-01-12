@@ -33,7 +33,7 @@ int read_serial_message(SoftwareSerial& mySerial, String* message, int bufsize)
     //Serial.print(buffer);
  
     if (ch == '\n') {
-     // buffer += '\0';          // end of line reached: null terminate string
+      buffer += '\0';          // end of line reached: null terminate string
       *message = buffer;
       mySerial.println(*message);  // print full message before exiting
       return index;            // success: return length of string (zero if string is empty)
