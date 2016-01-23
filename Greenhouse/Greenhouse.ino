@@ -85,6 +85,8 @@ bool fanStatus;
 bool ventPosition;
 String incomingString = "";
 String postString = "";
+String inputString = "";
+bool stringComplete = false;
 
 // Define timers
 Timer tempHumTimer;
@@ -102,8 +104,7 @@ Effector ventClose(ventClosePinD, ventPolarity);
 void setup() {
     // Open a serial connection
     Serial.begin(112500);
-   // espSerial.begin(112500);
-    espSerial.begin(9600);
+    espSerial.begin(112500);
     lastTime = millis();
 
     // Setup the timers
@@ -139,12 +140,24 @@ void loop() {
     
     // Process commands
     if (espSerial.available() > 0) {
-            messageSize = read_serial_message(espSerial, &incomingString, MAX_MESSAGE_SIZE);
-            delay(500);
+        messageSize = read_serial_message(espSerial, &incomingString, MAX_MESSAGE_SIZE);
+            //while (espSerial.available()) {
+                // get the new byte:
+            //    char inChar = (char)espSerial.read();
+                
+                // add it to the inputString:
+           //     inputString += inChar;
+                // if the incoming character is a newline, set a flag
+                // so the main loop can do something about it:
+           //     if (inChar == '\n') {
+           //         stringComplete = true;
+           //     }
+           // }
+            //delay(500);
             //Serial.print(F("Message size is: "));
             //Serial.println(messageSize);
-            Serial.print(F("Message is: "));
-            Serial.println(incomingString);
+            //Serial.print(F("Message is: "));
+            //Serial.println(incomingString);
 
             if (incomingString == "runFan") {
                 runFanCMD = 1;
@@ -162,10 +175,14 @@ void loop() {
                 sendStatusCMD = 1;
                 Serial.println("Received the send status command.");
             }
+            incomingString = "";
             
     }
-
-    
+    if (stringComplete) {
+        Serial.println(inputString);
+        inputString = "";
+        stringComplete = false;
+    }
     // Collect sensor data
     
     // Call function to read moisture data
@@ -232,7 +249,7 @@ void loop() {
 
         // Send data to esp8266 so it can post the data
         //espSerial.write(1);
-        Serial.println(postStr);
+        //Serial.println(postStr);
         espSerial.println(postStr);
         //espSerial.println(F("Test"));
         //espSerial.write(postStr);
@@ -278,3 +295,4 @@ void loop() {
     }
   
 }
+
