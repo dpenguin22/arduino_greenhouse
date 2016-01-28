@@ -68,10 +68,11 @@ const int moistPinA = 5; // Data pin of moisture sensor to Arduino analog pin 5
 SoftwareSerial espSerial(2,3);  // Rx, Tx
 const int pumpPinD = 4;  // Switch on water pump 
 const int fanPinD  = 5;  // Switch on fan
-const int dhtPinD  = 6;  // Data pin of DHT-22
-const int moistPowerPinD = 7; // Apply power to the moisture sensor
-const int ventOpenPinD = 8;  // Open vents
-const int ventClosePinD = 9; // Close vents
+const int dht1PinD = 6;  // Data pin of first DHT-22
+const int dht2PinD = 7;  // Dada pin of second DHT-22
+const int moistPowerPinD = 8; // Apply power to the moisture sensor
+const int ventOpenPinD   = 9; // Open vents
+const int ventClosePinD  = 10; // Close vents
 
 // Variables
 unsigned long lastTime;
@@ -79,8 +80,10 @@ unsigned long deltaTime;
 unsigned long currentTime;
 int messageSize;
 float moistVal;
-float fTemperatureVal;
-float humidityVal;
+float fTemperature1Val;
+float fTemperature2Val;
+float humidity1Val;
+float humidity2Val;
 bool fanStatus;
 bool ventPosition;
 String incomingString = "";
@@ -140,16 +143,15 @@ void loop() {
     
     // Process commands
     if (espSerial.available() > 0) {
-        messageSize = read_serial_message(espSerial, &incomingString, MAX_MESSAGE_SIZE);
+        //messageSize = read_serial_message(espSerial, &incomingString, MAX_MESSAGE_SIZE);
             //while (espSerial.available()) {
                 // get the new byte:
-            //    char inChar = (char)espSerial.read();
-                
+                char inChar = (char)espSerial.read();
                 // add it to the inputString:
-           //     inputString += inChar;
+                //inputString += inChar;
                 // if the incoming character is a newline, set a flag
                 // so the main loop can do something about it:
-           //     if (inChar == '\n') {
+                //if (inChar == '\n') {
            //         stringComplete = true;
            //     }
            // }
@@ -171,6 +173,9 @@ void loop() {
             } else if (incomingString == "postData") {
                 postDataCMD = 1;
                 Serial.println(F("Received the post data command."));
+            } else if (inChar == 'p') {
+                Serial.println(F("Received the post data char"));
+                postDataCMD = 1;    
             } else if (incomingString == "status") {
                 sendStatusCMD = 1;
                 Serial.println("Received the send status command.");
@@ -200,9 +205,9 @@ void loop() {
  
     // Call function to read temperature and humidity data
     if (tempHumTimer.evaluate_timer()) {
-        readTempHum(dhtPinD, &fTemperatureVal, &humidityVal);
+        readTempHum(dht1PinD, &fTemperature1Val, &humidity1Val);
         
-        sprintf(myString, "Temperature: %d degF. Humidity: %d%%. Moisture: %d. Fan Status %d. Vent position: %d\n", (int) fTemperatureVal, (int) humidityVal, (int) moistVal, (int) ventPosition, (int) fan.get_status());
+        sprintf(myString, "Temperature: %d degF. Humidity: %d%%. Moisture: %d. Fan Status %d. Vent position: %d\n", (int) fTemperature1Val, (int) humidity1Val, (int) moistVal, (int) ventPosition, (int) fan.get_status());
         
 //        espSerial.print(myString);
 //        espSerial.flush();   // Don't allow the next read until this data is finished transmitting
@@ -233,15 +238,20 @@ void loop() {
         closeVentCMD = 0;
     } else if (postDataCMD) {
         // Get a fresh value from the sensors
-        readTempHum(dhtPinD, &fTemperatureVal, &humidityVal);
-
+        readTempHum(dht1PinD, &fTemperature1Val, &humidity1Val);
+        readTempHum(dht2PinD, &fTemperature2Val, &humidity2Val);
+        
         //String postStr = THINGSPEAK_APIKEY;
         String postStr = "";
         postStr +="field1=";
-        postStr += String(fTemperatureVal);
-        postStr +="field2=";
-        postStr += String(humidityVal);
-        postStr += "field3=";
+        postStr += String(fTemperature1Val);
+        postStr +="&field2=";
+        postStr += String(humidity1Val);
+        postStr += "&field3=";
+        postStr += String(fTemperature2Val);
+        postStr += "&field4=";
+        postStr += String(humidity2Val);
+        postStr += "&field5=";
         postStr += String(moistVal);
         postStr += "\r\n\r\n";
         // Reset the command
@@ -261,7 +271,7 @@ void loop() {
 
     // If the fan is not currently running and the temperature
     // exceeds the preset value, turn on the fan   
-    if (!fan.get_status() && fanTimer.evaluate_timer() && fTemperatureVal > fanTempMax) {
+    if (!fan.get_status() && fanTimer.evaluate_timer() && fTemperature1Val > fanTempMax) {
         
         fan.start_digital(fanPinD);
         fan.set_status(true);

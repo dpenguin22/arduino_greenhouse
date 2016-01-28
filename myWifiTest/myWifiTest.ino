@@ -13,7 +13,7 @@ void updateThingSpeak(String tsData);
 
 // ThingSpeak Settings
 char thingSpeakAddress[] = "api.thingspeak.com";
-const int updateThingSpeakInterval = 30 * 1000;      // Time interval in milliseconds to update ThingSpeak (number of seconds * 1000 = interval)
+const int updateThingSpeakInterval = 600 * 1000;      // Time interval in milliseconds to update ThingSpeak (number of seconds * 1000 = interval)
 
 // Variable Setup
 long lastConnectionTime = 0; 
@@ -217,11 +217,12 @@ void loop() {
     
         client.stop();
     }
-  
+    client.stop();
     // Update ThingSpeak
     if(!client.connected() && (millis() - lastConnectionTime > updateThingSpeakInterval))
     {
-        Serial.write("postData\n");
+        //Serial.write("postData\n");
+        Serial.write('p');
         Serial.flush();
         //delay(500);
         //Serial.write("");
@@ -238,6 +239,7 @@ void loop() {
                 // print the message received:
                 //Serial.print(F("I received: "));
                 //Serial.println(respMsg);
+                
             } else {
                 respMsg = "The string was empty";
             }
@@ -245,6 +247,8 @@ void loop() {
         //Serial.println(respMsg);
         //updateThingSpeak("field1="+analogValue0);
         //updateThingSpeak("field1="+String(4));
+        //Serial.println("Testing post");
+        //respMsg = "field1=66&field2=99&field3=200\r\n\r\n";
         updateThingSpeak(respMsg);
         //Serial.write("");
     }
@@ -322,24 +326,25 @@ int read_message(String* message, int bufsize)
 void updateThingSpeak(String tsData)
 {
   if (client.connect(thingSpeakAddress, 80))
-  {         
-//    client.print("POST /update HTTP/1.1\n");
-//    client.print("Host: api.thingspeak.com\n");
-//    client.print("Connection: close\n");
-//    client.print("X-THINGSPEAKAPIKEY: "+THINGSPEAK_APIKEY+"\n");
-//    client.print("Content-Type: application/x-www-form-urlencoded\n");
-//    client.print("Content-Length: ");
-//    client.print(tsData.length());
-//    client.print("\n\n");
+  {
+    //Serial.println("Starting post");         
+    client.print("POST /update HTTP/1.1\n");
+    client.print("Host: api.thingspeak.com\n");
+    client.print("Connection: close\n");
+    client.print("X-THINGSPEAKAPIKEY: "+THINGSPEAK_APIKEY+"\n");
+    client.print("Content-Type: application/x-www-form-urlencoded\n");
+    client.print("Content-Length: ");
+    client.print(tsData.length());
+    client.print("\n\n");
 
-//    client.print(tsData);
+    client.print(tsData);
     
     lastConnectionTime = millis();
     
     if (client.connected())
     {
-//      Serial.println("Connecting to ThingSpeak...");
-//      Serial.println();
+      Serial.println("Connecting to ThingSpeak...");
+      Serial.println();
       Serial.println(tsData);
       
       failedCounter = 0;
