@@ -128,8 +128,8 @@ void setup() {
 }
 
 void loop() { 
-    char myString[MAX_MESSAGE_SIZE] = "";  // Storage for string to send across Serial
-     
+    char myString1[MAX_MESSAGE_SIZE] = "";  // Storage for string to send across Serial
+    char myString2[MAX_MESSAGE_SIZE] = "";  // Storage for string to send across Serial 
     // Compute time interval since this code was last run
     currentTime = millis();
     deltaTime = currentTime - lastTime;
@@ -206,9 +206,11 @@ void loop() {
     // Call function to read temperature and humidity data
     if (tempHumTimer.evaluate_timer()) {
         readTempHum(dht1PinD, &fTemperature1Val, &humidity1Val);
-        
-        sprintf(myString, "Temperature: %d degF. Humidity: %d%%. Moisture: %d. Fan Status %d. Vent position: %d\n", (int) fTemperature1Val, (int) humidity1Val, (int) moistVal, (int) ventPosition, (int) fan.get_status());
-        
+        readTempHum(dht2PinD, &fTemperature2Val, &humidity2Val);
+        sprintf(myString1, "Temperature1: %d degF. Humidity: %d%%. Moisture: %d. Fan Status %d. Vent position: %d\n", (int) fTemperature1Val, (int) humidity1Val, (int) moistVal, (int) ventPosition, (int) fan.get_status());
+        sprintf(myString2, "Temperature2: %d degF. Humidity: %d%%. Moisture: %d. Fan Status %d. Vent position: %d\n", (int) fTemperature2Val, (int) humidity2Val, (int) moistVal, (int) ventPosition, (int) fan.get_status());
+        Serial.println(myString1);
+        Serial.println(myString2);
 //        espSerial.print(myString);
 //        espSerial.flush();   // Don't allow the next read until this data is finished transmitting
 
@@ -243,7 +245,7 @@ void loop() {
         
         //String postStr = THINGSPEAK_APIKEY;
         String postStr = "";
-        postStr +="field1=";
+        postStr +="&field1=";
         postStr += String(fTemperature1Val);
         postStr +="&field2=";
         postStr += String(humidity1Val);
@@ -272,7 +274,7 @@ void loop() {
     // If the fan is not currently running and the temperature
     // exceeds the preset value, turn on the fan   
     if (!fan.get_status() && fanTimer.evaluate_timer() && fTemperature1Val > fanTempMax) {
-        
+        Serial.println("Fan has turned on");
         fan.start_digital(fanPinD);
         fan.set_status(true);
         fanTimer.reset_timer();      
