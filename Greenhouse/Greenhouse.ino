@@ -209,8 +209,8 @@ void loop() {
         readTempHum(dht2PinD, &fTemperature2Val, &humidity2Val);
         sprintf(myString1, "Temperature1: %d degF. Humidity: %d%%. Moisture: %d. Fan Status %d. Vent position: %d\n", (int) fTemperature1Val, (int) humidity1Val, (int) moistVal, (int) ventPosition, (int) fan.get_status());
         sprintf(myString2, "Temperature2: %d degF. Humidity: %d%%. Moisture: %d. Fan Status %d. Vent position: %d\n", (int) fTemperature2Val, (int) humidity2Val, (int) moistVal, (int) ventPosition, (int) fan.get_status());
-        Serial.println(myString1);
-        Serial.println(myString2);
+//        Serial.println(myString1);
+//        Serial.println(myString2);
 //        espSerial.print(myString);
 //        espSerial.flush();   // Don't allow the next read until this data is finished transmitting
 
@@ -242,7 +242,7 @@ void loop() {
         // Get a fresh value from the sensors
         readTempHum(dht1PinD, &fTemperature1Val, &humidity1Val);
         readTempHum(dht2PinD, &fTemperature2Val, &humidity2Val);
-        
+      
         //String postStr = THINGSPEAK_APIKEY;
         String postStr = "";
         postStr +="&field1=";
@@ -258,7 +258,7 @@ void loop() {
         postStr += "\r\n\r\n";
         // Reset the command
         postDataCMD = 0;
-
+        Serial.println(postStr);
         // Send data to esp8266 so it can post the data
         //espSerial.write(1);
         //Serial.println(postStr);

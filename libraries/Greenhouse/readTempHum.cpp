@@ -11,6 +11,7 @@
 
     Modification History:
         10/2015 - Initial version
+	02/2016 - Added check on return value
 
 */
 
@@ -21,7 +22,7 @@
 //Constants
 dht DHT;
 
-void readTempHum(int dhtPin, float *ftemperature, float *humidity)
+int readTempHum(int dhtPin, float *ftemperature, float *humidity)
 {
     // Variables
     int chk;
@@ -32,8 +33,9 @@ void readTempHum(int dhtPin, float *ftemperature, float *humidity)
     chk = DHT.read22(dhtPin); 
 
     //Read data and store it to variables hum and temp
-    *humidity = DHT.humidity;
-    temperature= DHT.temperature;
-    *ftemperature = temperature * 9 / 5 + 32;
-
+    if (chk == 0) {
+        *humidity = DHT.humidity;
+        temperature= fabs(DHT.temperature);
+        *ftemperature = temperature * 9 / 5 + 32;
+    } 
 }  	 
