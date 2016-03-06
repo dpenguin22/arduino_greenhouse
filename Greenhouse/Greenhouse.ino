@@ -54,7 +54,7 @@ const int fanTempMax = 75; // Trigger temperature value to turn on fan
 const int fanTempMin = 50; // Trigger temperature value to turn off fan
 const int fanHumMax = 50; // Trigger humidity value to turn on fan
 const int fanHumMin = 40; // Trigger humidiy value to turn off fan
-const int ventTempMax = 60; // Trigger temperature value to open vents
+const int ventTempMax = 75; // Trigger temperature value to open vents
 const int ventTempMin = 50; // Trigger temperature value to close vents
 const int ventHumMax = 50; // Trigger humidity value to open vents
 const int ventHumMin = 40; // Trigger humidiy value to close vents
@@ -90,6 +90,7 @@ String incomingString = "";
 String postString = "";
 String inputString = "";
 bool stringComplete = false;
+char inChar;
 
 // Define timers
 Timer tempHumTimer;
@@ -107,7 +108,8 @@ Effector ventClose(ventClosePinD, ventPolarity);
 void setup() {
     // Open a serial connection
     Serial.begin(112500);
-    espSerial.begin(112500);
+    //espSerial.begin(112500);
+    espSerial.begin(9600);
     lastTime = millis();
 
     // Setup the timers
@@ -143,24 +145,28 @@ void loop() {
     
     // Process commands
     if (espSerial.available() > 0) {
-        //messageSize = read_serial_message(espSerial, &incomingString, MAX_MESSAGE_SIZE);
-            //while (espSerial.available()) {
+        messageSize = read_serial_message(espSerial, &incomingString, MAX_MESSAGE_SIZE);
+        //incomingString = espSerial.readString();  
+        Serial.print("The string: ");
+        Serial.println(incomingString);  
+           // while (espSerial.available()) {
                 // get the new byte:
-                char inChar = (char)espSerial.read();
+                //char inChar = (char)espSerial.read();
+                
                 // add it to the inputString:
                 //inputString += inChar;
+                //incomingString += inChar;
                 // if the incoming character is a newline, set a flag
                 // so the main loop can do something about it:
                 //if (inChar == '\n') {
-           //         stringComplete = true;
-           //     }
-           // }
+                //    stringComplete = true;
+                //}
+            //}
             //delay(500);
             //Serial.print(F("Message size is: "));
             //Serial.println(messageSize);
             //Serial.print(F("Message is: "));
             //Serial.println(incomingString);
-
             if (incomingString == "runFan") {
                 runFanCMD = 1;
                 Serial.println(F("Received the run fan command."));
@@ -173,12 +179,15 @@ void loop() {
             } else if (incomingString == "postData") {
                 postDataCMD = 1;
                 Serial.println(F("Received the post data command."));
-            } else if (inChar == 'p') {
-                Serial.println(F("Received the post data char"));
-                postDataCMD = 1;    
+            //} else if (inChar == 'p') {
+            //    Serial.println(F("Received the post data char"));
+            //    postDataCMD = 1;    
             } else if (incomingString == "status") {
                 sendStatusCMD = 1;
-                Serial.println("Received the send status command.");
+                Serial.println(F("Received the send status command."));
+            //} else if (inChar == 's') {
+            //    sendStatusCMD = 1;
+            //    Serial.println("Received the send status char.");
             }
             incomingString = "";
             
@@ -211,7 +220,7 @@ void loop() {
         sprintf(myString2, "Temperature2: %d degF. Humidity: %d%%. Moisture: %d. Fan Status %d. Vent position: %d\n", (int) fTemperature2Val, (int) humidity2Val, (int) moistVal, (int) ventPosition, (int) fan.get_status());
 //        Serial.println(myString1);
 //        Serial.println(myString2);
-//        espSerial.print(myString);
+//        espSerial.print(myString1);
 //        espSerial.flush();   // Don't allow the next read until this data is finished transmitting
 
     }
@@ -222,6 +231,7 @@ void loop() {
         fan.start_digital(fanPinD);
         fan.set_status(true);
         fanTimer.reset_timer();
+        Serial.println(F("Received the run fan command."));
         // Reset the command
         runFanCMD = 0;
     } else if (openVentCMD) {
@@ -238,6 +248,17 @@ void loop() {
         Serial.println(F("Received the close vent command."));
         // Reset the command
         closeVentCMD = 0;
+    } else if (sendStatusCMD) {
+        // Get a fresh value from the sensors
+        readTempHum(dht1PinD, &fTemperature1Val, &humidity1Val);
+        readTempHum(dht2PinD, &fTemperature2Val, &humidity2Val);
+        postString = "Inside Temperature: "+String(fTemperature1Val)+" degF  ";
+        postString += "Inside Humidity: "+String(humidity1Val)+"%";
+        espSerial.println(postString);
+        espSerial.flush();
+        Serial.println(F("Received the send status command."));
+        // Reset the command
+        sendStatusCMD = 0;
     } else if (postDataCMD) {
         // Get a fresh value from the sensors
         readTempHum(dht1PinD, &fTemperature1Val, &humidity1Val);
@@ -255,18 +276,21 @@ void loop() {
         postStr += String(humidity2Val);
         postStr += "&field5=";
         postStr += String(moistVal);
-        postStr += "\r\n\r\n";
+        postStr += "\n";
+
         // Reset the command
         postDataCMD = 0;
-        Serial.println(postStr);
+
         // Send data to esp8266 so it can post the data
         //espSerial.write(1);
         //Serial.println(postStr);
         espSerial.println(postStr);
+        //Serial.println(postStr);
         //espSerial.println(F("Test"));
         //espSerial.write(postStr);
         //espSerial.write("Test\r\n");
-        espSerial.flush();
+        //espSerial.flush();
+        
     }
     
     // Process effectors
