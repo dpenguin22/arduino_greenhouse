@@ -35,7 +35,7 @@
 #define MAX_MESSAGE_SIZE  120
 #define MOISTURE_INTERVAL 20    // Interval (s) to run moisture check
 #define TEMPHUM_INTERVAL  10    // Interval (s) to run temperature/humidity check
-#define FAN_TIMER 300           // Time (s) to run the fan
+#define FAN_TIMER 180           // Time (s) to run the fan
 #define VENT_TIMER 10           // Time (s) to actuate the open/close of the vent
 #define POST_TIMER 1800         // Time (s) to post sensor data to web
 
@@ -50,13 +50,13 @@ bool runPumpCMD = 0;
 // Calibration data
 const int moistMin = 300; // Trigger value to turn on irrigation
 const int moistMax = 600; // Trigger value to turn off irrigation
-const int fanTempMax = 75; // Trigger temperature value to turn on fan
+const int fanTempMax = 90; // Trigger temperature value to turn on fan
 const int fanTempMin = 50; // Trigger temperature value to turn off fan
-const int fanHumMax = 50; // Trigger humidity value to turn on fan
+const int fanHumMax = 80; // Trigger humidity value to turn on fan
 const int fanHumMin = 40; // Trigger humidiy value to turn off fan
 const int ventTempMax = 75; // Trigger temperature value to open vents
 const int ventTempMin = 50; // Trigger temperature value to close vents
-const int ventHumMax = 50; // Trigger humidity value to open vents
+const int ventHumMax = 70; // Trigger humidity value to open vents
 const int ventHumMin = 40; // Trigger humidiy value to close vents
 bool fanPolarity = 0;  // The fan is connected through a relay which is active with a low signal
 bool ventPolarity = 0; // The vent is connected through a relay which is active with a low signal
@@ -218,7 +218,7 @@ void loop() {
         readTempHum(dht2PinD, &fTemperature2Val, &humidity2Val);
         sprintf(myString1, "Temperature1: %d degF. Humidity: %d%%. Moisture: %d. Fan Status %d. Vent position: %d\n", (int) fTemperature1Val, (int) humidity1Val, (int) moistVal, (int) ventPosition, (int) fan.get_status());
         sprintf(myString2, "Temperature2: %d degF. Humidity: %d%%. Moisture: %d. Fan Status %d. Vent position: %d\n", (int) fTemperature2Val, (int) humidity2Val, (int) moistVal, (int) ventPosition, (int) fan.get_status());
-//        Serial.println(myString1);
+        Serial.println(myString1);
 //        Serial.println(myString2);
 //        espSerial.print(myString1);
 //        espSerial.flush();   // Don't allow the next read until this data is finished transmitting
@@ -297,7 +297,7 @@ void loop() {
 
     // If the fan is not currently running and the temperature
     // exceeds the preset value, turn on the fan   
-    if (!fan.get_status() && fanTimer.evaluate_timer() && fTemperature1Val > fanTempMax) {
+    if (!fan.get_status() && fanTimer.evaluate_timer() && (fTemperature1Val > fanTempMax || humidity1Val > fanHumMax)) {
         Serial.println("Fan has turned on");
         fan.start_digital(fanPinD);
         fan.set_status(true);
