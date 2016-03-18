@@ -107,7 +107,8 @@ Effector ventClose(ventClosePinD, ventPolarity);
 
 void setup() {
     // Open a serial connection
-    Serial.begin(112500);
+    //Serial.begin(112500);
+    Serial.begin(9600);
     //espSerial.begin(112500);
     espSerial.begin(9600);
     lastTime = millis();
@@ -144,11 +145,13 @@ void loop() {
     ventTimer.increment_timer(deltaTime);
     
     // Process commands
-    if (espSerial.available() > 0) {
+    //if (espSerial.available() > 0) {
+    if (Serial.available() > 0) {
         messageSize = read_serial_message(espSerial, &incomingString, MAX_MESSAGE_SIZE);
+       
         //incomingString = espSerial.readString();  
-        Serial.print("The string: ");
-        Serial.println(incomingString);  
+        //Serial.print("The string: ");
+        //Serial.println(incomingString);  
            // while (espSerial.available()) {
                 // get the new byte:
                 //char inChar = (char)espSerial.read();
@@ -197,35 +200,8 @@ void loop() {
         inputString = "";
         stringComplete = false;
     }
-    // Collect sensor data
-    
-    // Call function to read moisture data
-    if (moistureTimer.evaluate_timer()) {
 
-        // Apply power to the sensor. There is a delay
-        // in the read function that will pause before
-        // taking the first reading
-        digitalWrite(moistPowerPinD, HIGH);
-        
-        moistVal = readMoisture(moistPinA);
-        //Serial.print("Moisture: ");
-        //Serial.println(moistVal);
-    }
- 
-    // Call function to read temperature and humidity data
-    if (tempHumTimer.evaluate_timer()) {
-        readTempHum(dht1PinD, &fTemperature1Val, &humidity1Val);
-        readTempHum(dht2PinD, &fTemperature2Val, &humidity2Val);
-        sprintf(myString1, "Temperature1: %d degF. Humidity: %d%%. Moisture: %d. Fan Status %d. Vent position: %d\n", (int) fTemperature1Val, (int) humidity1Val, (int) moistVal, (int) ventPosition, (int) fan.get_status());
-        sprintf(myString2, "Temperature2: %d degF. Humidity: %d%%. Moisture: %d. Fan Status %d. Vent position: %d\n", (int) fTemperature2Val, (int) humidity2Val, (int) moistVal, (int) ventPosition, (int) fan.get_status());
-        Serial.println(myString1);
-//        Serial.println(myString2);
-//        espSerial.print(myString1);
-//        espSerial.flush();   // Don't allow the next read until this data is finished transmitting
-
-    }
-
-// Execute commands
+    // Execute commands
     if (runFanCMD) {
         // Start the fan
         fan.start_digital(fanPinD);
@@ -292,6 +268,35 @@ void loop() {
         //espSerial.flush();
         
     }
+    // Collect sensor data
+    
+    // Call function to read moisture data
+    if (moistureTimer.evaluate_timer()) {
+
+        // Apply power to the sensor. There is a delay
+        // in the read function that will pause before
+        // taking the first reading
+        digitalWrite(moistPowerPinD, HIGH);
+        
+        moistVal = readMoisture(moistPinA);
+        //Serial.print("Moisture: ");
+        //Serial.println(moistVal);
+    }
+ 
+    // Call function to read temperature and humidity data
+    if (tempHumTimer.evaluate_timer()) {
+        readTempHum(dht1PinD, &fTemperature1Val, &humidity1Val);
+        readTempHum(dht2PinD, &fTemperature2Val, &humidity2Val);
+        sprintf(myString1, "Temperature1: %d degF. Humidity: %d%%. Moisture: %d. Fan Status %d. Vent position: %d\n", (int) fTemperature1Val, (int) humidity1Val, (int) moistVal, (int) ventPosition, (int) fan.get_status());
+        sprintf(myString2, "Temperature2: %d degF. Humidity: %d%%. Moisture: %d. Fan Status %d. Vent position: %d\n", (int) fTemperature2Val, (int) humidity2Val, (int) moistVal, (int) ventPosition, (int) fan.get_status());
+        Serial.println(myString1);
+//        Serial.println(myString2);
+//        espSerial.print(myString1);
+//        espSerial.flush();   // Don't allow the next read until this data is finished transmitting
+
+    }
+
+
     
     // Process effectors
 

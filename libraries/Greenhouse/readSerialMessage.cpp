@@ -26,6 +26,7 @@ int read_serial_message(SoftwareSerial& mySerial, String* message, int bufsize)
   unsigned int count = 0;
 
   while (mySerial.available()) {
+  //while (Serial.available()) {
     //for (int index = 0; index < bufsize; index++) {
 
     // Wait until characters are available
@@ -33,6 +34,7 @@ int read_serial_message(SoftwareSerial& mySerial, String* message, int bufsize)
     //}
     
       char ch = mySerial.read(); // read next character
+      //char ch = Serial.read(); // read next character
       //Serial.print(ch); // echo it back: useful with the serial monitor (optional)
       //Serial.print(buffer);
  
@@ -40,6 +42,7 @@ int read_serial_message(SoftwareSerial& mySerial, String* message, int bufsize)
           buffer += '\0';              // end of line reached: null terminate string
           *message = buffer;
           mySerial.println(*message);  // print full message before exiting
+          //Serial.println(*message);  // print full message before exiting
           return count;                // success: return length of string (zero if string is empty)
       }
       buffer += ch; // Append character to buffer

@@ -39,11 +39,18 @@ void handle_root() {
 
 void readArduino(String* message) {
     String incomingString = "";
+    char incomingChar;
     *message = "";
     if (Serial.available() > 0) {
           while (Serial.available() > 0) {
-              incomingString += char(Serial.read());
+              incomingChar = char(Serial.read());
+              if (incomingChar != '\n') {
+                  incomingString += incomingChar;
+              } else {
+                  break;
+              }
               delay(250);
+              Serial.println(incomingString);
           }
           //incomingString = Serial.readString();
           if (incomingString.length() > 0) {
@@ -171,6 +178,7 @@ void loop(void) {
         //Serial.write("");
         if (updateThing && Serial.available() > 0) {
             //messageSize = read_message(&incomingString, MAX_MESSAGE_SIZE);
+            Serial.println("Ready to Read");
             readArduino(&respMsg);
             //incomingString = Serial.readString();
             //if (incomingString.length() > 0) {
