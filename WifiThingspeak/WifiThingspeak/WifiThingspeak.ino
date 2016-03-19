@@ -1,9 +1,23 @@
 
-/* WifiThingspeak - ESP8266 Webserver with a DHT sensor as an input
+/* WifiThingspeak -
+  
+    Purpose:
+        Communication module for Greenhouse control.
+        Based on DHTWServer: Version 1.0  5/3/2014 Mike Barela for Adafruit Industries
 
-   Based on DHTWServer: Version 1.0  5/3/2014 Mike Barela for Adafruit Industries
-   
+    Dependencies:
+        ESP8266 library
+
+    Assumptions/Limitations:
+        Designed to run on an ESP8266 module, tested on an Adafruit Huzzah board
+        
+    Modification History:
+        03/2016 - Initial version
+
 */
+
+
+// Libraries
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
@@ -12,9 +26,9 @@
 
 // ThingSpeak Settings
 char thingSpeakAddress[] = "api.thingspeak.com";
-const int updateThingSpeakInterval = 60 * 1000;      // Time interval in milliseconds to update ThingSpeak (number of seconds * 1000 = interval)
+const int updateThingSpeakInterval = 1800 * 1000;      // Time interval in milliseconds to update ThingSpeak (number of seconds * 1000 = interval)
 
-#define MAX_MESSAGE_SIZE 120
+#define MAX_MESSAGE_SIZE 200
 
 long lastConnectionTime = 0; 
 boolean lastConnected = false;
@@ -31,36 +45,10 @@ void updateThingSpeak(String tsData);
 String webString="";     // String to display
 // Generally, you should use "unsigned long" for variables that hold time
 unsigned long previousMillis = 0;        // will store last temp was read
-const long interval = 2000;              // interval at which to read sensor
  
 void handle_root() {
   server.send(200, "text/plain", "Hello from the weather esp8266, read from /temp or /humidity");
   delay(100);
-}
-
-void readArduino(String* message) {
-    String incomingString = "";
-    char incomingChar;
-    *message = "";
-    if (Serial.available() > 0) {
-          while (Serial.available() > 0) {
-              incomingChar = char(Serial.read());
-              if (incomingChar != '\n') {
-                  incomingString += incomingChar;
-              } else {
-                  break;
-              }
-              delay(250);
-              Serial.println(incomingString);
-          }
-          //incomingString = Serial.readString();
-          if (incomingString.length() > 0) {
-              *message = incomingString;   // assign to the response message                
-          } else {
-              *message = "The string was empty";
-          }
-    }
-    //Serial.println(*message);
 }
  
 void setup(void)
@@ -92,37 +80,42 @@ void setup(void)
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
    
-////  server.on("/", handle_root);
+  server.on("/", handle_root);
   
   //server.on("/temp", [](){  // if you add this subdirectory to your webserver call, you get text below :)
   //  gettemperature();       // read sensor
   //  webString="Temperature: "+String((int)temp_f)+" F";   // Arduino has a hard time with float to string
   //  server.send(200, "text/plain", webString);            // send to someones browser when asked
   //});
+  server.on("/runFan", [] () { // if you add this subdirectory to your webserver call, you get the text below
+      Serial.print("runFan\n");
+      Serial.flush();
+  });
 
-////  server.on("/status", [] () { // if you add this subdirectory to your webserver call, you get the text below
-////      String incomingString = "";
-////      String respMsg = "";
-////      Serial.print("status\n");
-////      Serial.flush();
-////      readArduino(&respMsg);
-      //if (Serial.available()) {
-      //    incomingString = Serial.readString();
-      //    if (incomingString.length() > 0) {
-      //        respMsg = incomingString;   // assign to the response message                
-      //    } else {
-      //        respMsg = "The string was empty";
-      //        Serial.println(respMsg);
-      //    }
-      //}
-      //Serial.println("");
-      //Serial.println(respMsg);
-////      webString="Test "+respMsg+" Message";
-////      server.send(200, "text/plain", webString);
-////  });
+  server.on("/openVent", [] () { // if you add this subdirectory to your webserver call, you get the text below
+      Serial.print("openVent\n");
+      Serial.flush();
+  });
   
-////  server.begin();
-////  Serial.println("HTTP server started");
+  server.on("/status", [] () { // if you add this subdirectory to your webserver call, you get the text below
+      String incomingString = "";
+      String respMsg = "";
+      Serial.print("status\n");
+      Serial.flush();
+      delay(300);
+      messageSize = read_message(&incomingString, MAX_MESSAGE_SIZE);
+      if (incomingString.length() > 0) {
+          respMsg = incomingString;   // assign to the response message                
+      } else {
+          respMsg = "The string was empty";
+      }
+      Serial.println(respMsg);
+      webString="Test "+respMsg+" Message";
+      server.send(200, "text/plain", webString);
+  });
+  
+  server.begin();
+  Serial.println("HTTP server started");
 }
  
 void loop(void) {
@@ -143,7 +136,7 @@ void loop(void) {
         Serial.print(".");
     }
     
-////    server.handleClient();
+    server.handleClient();
    
     // Disconnect from ThingSpeak
     if (!client.connected() && lastConnected)
@@ -164,38 +157,25 @@ void loop(void) {
     if(!updateThing && !client.connected() && (timeSinceConnection > updateThingSpeakInterval))
     {
         updateThing = true;
-        //Serial.write('p');
         Serial.print("postData\n");
         //delay(500);
         Serial.flush();
-        Serial.println("");
     }
-//    if (Serial.available() > 0) {
-//        readArduino(&respMsg);
-//        Serial.print("test: ");
-//        Serial.println(respMsg);
-//    }
-//        delay(3000);
-        //Serial.write("");
-        if (updateThing && Serial.available() > 0) {
-            //messageSize = read_message(&incomingString, MAX_MESSAGE_SIZE);
-            Serial.println("Ready to Read");
-            readArduino(&respMsg);
-            //incomingString = Serial.readString();
-            //if (incomingString.length() > 0) {
-            //    respMsg = incomingString;   // assign to the response message                
-            //} else {
-            //    respMsg = "The string was empty";
-            //    Serial.println(respMsg);
-            //}
-            //Serial.print(F("Message size is: "));
-            //Serial.println(messageSize);
-            Serial.print("The message: ");
-            Serial.print(respMsg);
-            updateThingSpeak(respMsg);
-            updateThing = false;
-            //Serial.write("");
+    if (updateThing && Serial.available() > 0) {
+        messageSize = read_message(&incomingString, MAX_MESSAGE_SIZE);
+      
+        if (incomingString.length() > 0) {
+            respMsg = incomingString;   // assign to the response message                
+        } else {
+            respMsg = "The string was empty";
         }
+        Serial.print(F("Message size is: "));
+        Serial.println(messageSize);
+        Serial.print("The message: ");
+        Serial.println(respMsg);
+        updateThingSpeak(respMsg);
+        updateThing = false;
+    }
   
     // Check if Arduino Ethernet needs to be restarted
     // if (failedCounter > 3 ) {startEthernet();}
@@ -203,33 +183,51 @@ void loop(void) {
     lastConnected = client.connected();
   
 } 
-
 int read_message(String* message, int bufsize)
 {
   String buffer = "";
-  for (int index = 0; index < bufsize; index++) {
+  int count = 0;
+  unsigned long startTime = millis();
+  unsigned long elapsedTime = 0;
 
-    // Wait until characters are available
-    while (Serial.available() == 0) {
-    }
-    char ch = Serial.read(); // read next character
- 
-    //Serial.print(ch); // echo it back: useful with the serial monitor (optional)
-    if (ch == '\n') {
-      buffer += '\0';          // end of line reached: null terminate string
-      *message = buffer;
-      //Serial.println(*message);  // print full message before exiting
-      return index;              // success: return length of string (zero if string is empty)
-    }
-    buffer += ch; // Append character to buffer
+  // A three second watchdog timer is used in case the Serial buffer empties without the end of line char
+  while (elapsedTime < 3000) {
+      // Update timer
+      elapsedTime = millis() - startTime;
+
+      // Continue reading while new characters are available
+      if (Serial.available()) {
+          //char temp = Serial.peek();  // Check the next character (useful for debugging)
+          //Serial.print(temp);
+          char ch = Serial.read();    // read next character
+          
+          if (ch == '\n') {
+              if (count > 1) {
+                  buffer += '\0';              // end of line reached: null terminate string
+                  *message = buffer;
+                  return count;                // success: return length of string (zero if string is empty)
+              } else {
+                  // End of line was received after only 1 character, start over with the read 
+                  buffer = "";
+                  count = 0;
+              }
+          } else {
+              buffer += ch; // Append character to buffer
+              count += 1;
+          }
+
+          if (count > bufsize) {
+              // Reached end of buffer, but have not seen the end-of-line yet.
+              // Discard the rest of the line (safer than returning a partial line).
+
+              *message = "The received message exceeded the buffer length";
+              return -1; // error: return negative one to indicate the input was too long
+          }
+      }
   }
-
-  // Reached end of buffer, but have not seen the end-of-line yet.
-  // Discard the rest of the line (safer than returning a partial line).
-
-  *message = "The received message exceeded the buffer length";
-  Serial.println(*message);
-  return -1; // error: return negative one to indicate the input was too long
+  // If this message is reached the watchdog timer expired
+  *message = "No end of line character found";
+  return -1;
 }
 
 /*
@@ -271,7 +269,7 @@ void updateThingSpeak(String tsData)
   if (client.connect(thingSpeakAddress, 80))
   {
     //Serial.println("Starting post");  
- /*    
+     
     client.print("POST /update HTTP/1.1\n");
     client.print("Host: api.thingspeak.com\n");
     client.print("Connection: close\n");
@@ -282,7 +280,7 @@ void updateThingSpeak(String tsData)
     client.print("\n\n");
 
     client.print(tsData);
- */
+ 
     lastConnectionTime = millis();
     
     if (client.connected())

@@ -143,12 +143,12 @@ void loop() {
     ventTimer.increment_timer(deltaTime);
     
     // Process commands
-    //if (espSerial.available() > 0) {
-    if (Serial.available() > 0) {
+    if (espSerial.available() > 0) {
+    //if (Serial.available() > 0) {
         messageSize = read_serial_message(espSerial, &incomingString, MAX_MESSAGE_SIZE);
  
-        Serial.print(F("Message size is: "));
-        Serial.println(messageSize);
+        //Serial.print(F("Message size is: "));
+        //Serial.println(messageSize);
         Serial.print(F("Message is: "));
         Serial.println(incomingString);
 
@@ -195,7 +195,11 @@ void loop() {
         readTempHum(dht1PinD, &fTemperature1Val, &humidity1Val);
         readTempHum(dht2PinD, &fTemperature2Val, &humidity2Val);
         postStr = "Inside Temperature: "+String(fTemperature1Val)+" degF  ";
-        postStr += "Inside Humidity: "+String(humidity1Val)+"%";
+        postStr += " Inside Humidity: "+String(humidity1Val)+"%";
+        postStr += " Outside Temperature: "+String(fTemperature2Val)+" degF  ";
+        postStr += " Outside Humidity: "+String(humidity2Val)+"%";
+        postStr += " Moisture: "+String(moistVal);
+        postStr += "\n";
         espSerial.println(postStr);
         espSerial.flush();
         Serial.println(F("Received the send status command."));
