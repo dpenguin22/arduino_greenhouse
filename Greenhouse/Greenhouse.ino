@@ -17,7 +17,7 @@
         11/2015 - Added vent control and effector commands
         12/2015 - Add software serial ports for comm with esp8266
         03/2016 - Code cleanup and better handling of incoming commands
-
+        03/2016 - Improved humidity check
 */
 
 
@@ -34,7 +34,7 @@
 
 // Constants
 #define MAX_MESSAGE_SIZE  120
-#define MOISTURE_INTERVAL 20    // Interval (s) to run moisture check
+#define MOISTURE_INTERVAL 180   // Interval (s) to run moisture check
 #define TEMPHUM_INTERVAL  10    // Interval (s) to run temperature/humidity check
 #define FAN_TIMER 180           // Time (s) to run the fan
 #define VENT_TIMER 5            // Time (s) to actuate the open/close of the vent
@@ -52,7 +52,7 @@ bool runPumpCMD = 0;
 const int moistMin = 300; // Trigger value to turn on irrigation
 const int moistMax = 600; // Trigger value to turn off irrigation
 const int fanTempMax = 90; // Trigger temperature value to turn on fan
-const int fanTempMin = 50; // Trigger temperature value to turn off fan
+const int fanTempMin = 80; // Trigger temperature value to check humidity levels
 const int fanHumMax = 80; // Trigger humidity value to turn on fan
 const int fanHumMin = 40; // Trigger humidiy value to turn off fan
 const int ventTempMax = 75; // Trigger temperature value to open vents
@@ -262,12 +262,14 @@ void loop() {
 
     // If the fan is not currently running and the temperature
     // exceeds the preset value, turn on the fan   
-    if (!fan.get_status() && fanTimer.evaluate_timer() && (fTemperature1Val > fanTempMax || humidity1Val > fanHumMax)) {
-        Serial.println("Fan has turned on");
-        fan.start_digital(fanPinD);
-        fan.set_status(true);
-        fanTimer.reset_timer();      
-    }
+    if (!fan.get_status() && fanTimer.evaluate_timer() && fTemperature1Val > fanTempMin) {
+        if (fTemperature1Val > fanTempMax || humidity1Val > fanHumMax) {
+            Serial.println("Fan has turned on");
+            fan.start_digital(fanPinD);
+            fan.set_status(true);
+            fanTimer.reset_timer();  
+        }    
+    } 
     // If the fan is on and the timer is expired
     if (fan.get_status() && fanTimer.evaluate_timer()) {
         fan.stop_digital(fanPinD); 
