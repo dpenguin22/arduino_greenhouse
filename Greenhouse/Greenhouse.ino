@@ -38,7 +38,8 @@
 #define TEMPHUM_INTERVAL  10    // Interval (s) to run temperature/humidity check
 #define FAN_TIMER 180           // Time (s) to run the fan
 #define VENT_TIMER 5            // Time (s) to actuate the open/close of the vent
-#define POST_TIMER 1800         // Time (s) to post sensor data to web
+#define RESET_TIMER 28800       // Time (s) to reset the wifi module
+
 
 // Commands
 bool runFanCMD = 0;
@@ -95,7 +96,7 @@ Timer tempHumTimer;
 Timer moistureTimer;
 Timer fanTimer;
 Timer ventTimer;
-Timer postTimer;
+Timer resetTimer;
 
 // Define Effectors
 Effector fan(fanPinD, fanPolarity);
@@ -116,7 +117,7 @@ void setup() {
     moistureTimer.set_threshold(1.0 / MOISTURE_INTERVAL);
     fanTimer.set_threshold(1.0 / FAN_TIMER);
     ventTimer.set_threshold(1.0 / VENT_TIMER);
-    postTimer.set_threshold(1.0 / POST_TIMER);
+    resetTimer.set_threshold(1.0 / RESET_TIMER);
 
     // Initialize effectors to the off state
     digitalWrite(fanPinD, HIGH);
@@ -125,6 +126,10 @@ void setup() {
 
     // Initialize power to moisture sensors off
     digitalWrite(moistPowerPinD, LOW);
+
+    // Initialize the pin used to reset the wifi module to high, it
+    // will reset when pulled low
+    digitalWrite(wifiResetPinD, HIGH);
   
 }
 
@@ -231,6 +236,8 @@ void loop() {
         // Send data to esp8266 so it can post the data
         espSerial.println(postStr);
         espSerial.flush();   // Don't allow the next read until this data is finished transmitting
+
+        
         
     }
     // Collect sensor data
